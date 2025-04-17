@@ -1,0 +1,159 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/rootLayout"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="#FFFFFF">
+
+    <!-- 标题 -->
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginTop="100dp"
+        android:text="用户注册"
+        android:textColor="#333333"
+        android:textSize="30sp"
+        android:textStyle="bold" />
+
+    <!-- 用户名输入框 -->
+    <com.google.android.material.textfield.TextInputLayout
+        android:id="@+id/usernameInputLayout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="40dp"
+        android:layout_marginStart="20dp"
+        android:layout_marginEnd="20dp"
+        app:boxBackgroundColor="@android:color/white"
+        app:boxStrokeColor="@color/light_blue_border"
+        app:hintEnabled="false"
+        app:endIconMode="clear_text">
+
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/usernameInput"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="请输入用户名"
+            android:inputType="text"
+            android:textSize="16sp"
+            android:padding="10dp"/>
+    </com.google.android.material.textfield.TextInputLayout>
+
+    <!-- 用户名下划线 -->
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:layout_marginStart="20dp"
+        android:layout_marginEnd="20dp"
+        android:background="#EEEEEE" />
+
+    <!-- 手机号输入框 -->
+    <com.google.android.material.textfield.TextInputLayout
+        android:id="@+id/phoneInputLayout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="20dp"
+        android:layout_marginStart="20dp"
+        android:layout_marginEnd="20dp"
+        app:boxBackgroundColor="@android:color/white"
+        app:boxStrokeColor="@color/light_blue_border"
+        app:hintEnabled="false"
+        app:endIconMode="clear_text">
+
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/phoneInput"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="请输入手机号"
+            android:inputType="phone"
+            android:textSize="16sp"
+            android:padding="10dp"/>
+    </com.google.android.material.textfield.TextInputLayout>
+
+    <!-- 手机号下划线 -->
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:layout_marginStart="20dp"
+        android:layout_marginEnd="20dp"
+        android:background="#EEEEEE" />
+
+    <!-- 密码输入框 -->
+    <com.google.android.material.textfield.TextInputLayout
+        android:id="@+id/passwordInputLayout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="20dp"
+        android:layout_marginStart="20dp"
+        android:layout_marginEnd="20dp"
+        app:endIconMode="password_toggle"
+        app:boxBackgroundColor="@android:color/white"
+        app:boxStrokeColor="@color/light_blue_border"
+        app:hintEnabled="false">
+
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/passwordInput"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="请输入密码"
+            android:inputType="textPassword"
+            android:textSize="16sp"
+            android:padding="10dp"/>
+    </com.google.android.material.textfield.TextInputLayout>
+
+    <!-- 密码下划线 -->
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:layout_marginStart="20dp"
+        android:layout_marginEnd="20dp"
+        android:background="#EEEEEE" />
+
+    <!-- 确认密码输入框 -->
+    <com.google.android.material.textfield.TextInputLayout
+        android:id="@+id/confirmPasswordInputLayout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="20dp"
+        android:layout_marginStart="20dp"
+        android:layout_marginEnd="20dp"
+        app:endIconMode="password_toggle"
+        app:boxBackgroundColor="@android:color/white"
+        app:boxStrokeColor="@color/light_blue_border"
+        app:hintEnabled="false">
+
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/confirmPasswordInput"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="请再次输入密码"
+            android:inputType="textPassword"
+            android:textSize="16sp"
+            android:padding="10dp"/>
+    </com.google.android.material.textfield.TextInputLayout>
+
+    <!-- 确认密码下划线 -->
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:layout_marginStart="20dp"
+        android:layout_marginEnd="20dp"
+        android:background="#EEEEEE" />
+
+    <!-- 注册按钮 -->
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/registerButton"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="50dp"
+        android:layout_marginStart="20dp"
+        android:layout_marginEnd="20dp"
+        android:backgroundTint="@color/light_blue_border"
+        android:text="注册"
+        android:textColor="#FFFFFF"
+        android:textSize="18sp"
+        app:cornerRadius="8dp" />
+
+</LinearLayout>
