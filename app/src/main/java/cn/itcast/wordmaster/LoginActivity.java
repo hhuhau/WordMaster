@@ -16,6 +16,10 @@ public class LoginActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        // 隐藏ActionBar
+        if (getSupportActionBar() != null) {
+            getSupportActionBar().hide();
+        }
         setContentView(R.layout.activity_login);
 
         TextInputLayout phoneInputLayout = findViewById(R.id.phoneInputLayout);
@@ -24,7 +28,7 @@ public class LoginActivity extends AppCompatActivity {
 
         setupInputLayout(phoneInputLayout, "请输入手机号");
         setupInputLayout(passwordInputLayout, "请输入密码");
-        // 第几次呢
+
         // 设置快速注册链接的点击事件
         registerLink.setOnClickListener(v -> {
             Intent intent = new Intent(LoginActivity.this, RegisterActivity.class);
