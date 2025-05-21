@@ -10,16 +10,23 @@ public class Word {
     private String phonetic;
     private String meaning;
     private String bookId;
+    private int correctCount;
+    private String lastReviewed;
+    private int nextDueOffset;
 
     public Word() {
     }
 
-    public Word(int wordId, String spelling, String phonetic, String meaning, String bookId) {
+    public Word(int wordId, String spelling, String phonetic, String meaning, String bookId,
+                int correctCount, String lastReviewed, int nextDueOffset) {
         this.wordId = wordId;
         this.spelling = spelling;
         this.phonetic = phonetic;
         this.meaning = meaning;
         this.bookId = bookId;
+        this.correctCount = correctCount;
+        this.lastReviewed = lastReviewed;
+        this.nextDueOffset = nextDueOffset;
     }
 
     public int getWordId() {
@@ -60,6 +67,33 @@ public class Word {
 
     public void setBookId(String bookId) {
         this.bookId = bookId;
+        this.correctCount = correctCount;
+        this.lastReviewed = lastReviewed;
+        this.nextDueOffset = nextDueOffset;
+    }
+
+    public int getCorrectCount() {
+        return correctCount;
+    }
+
+    public void setCorrectCount(int correctCount) {
+        this.correctCount = correctCount;
+    }
+
+    public String getLastReviewed() {
+        return lastReviewed;
+    }
+
+    public void setLastReviewed(String lastReviewed) {
+        this.lastReviewed = lastReviewed;
+    }
+
+    public int getNextDueOffset() {
+        return nextDueOffset;
+    }
+
+    public void setNextDueOffset(int nextDueOffset) {
+        this.nextDueOffset = nextDueOffset;
     }
 
     @Override

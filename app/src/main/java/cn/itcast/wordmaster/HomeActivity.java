@@ -1,16 +1,17 @@
 package cn.itcast.wordmaster;
 
 import android.os.Bundle;
-import android.widget.TextView;
 import androidx.appcompat.app.AppCompatActivity;
-import com.google.android.material.button.MaterialButton;
+import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentTransaction;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
-import com.example.wordmaster.WordDao;
+import cn.itcast.wordmaster.fragment.HomeFragment;
+import cn.itcast.wordmaster.fragment.ProfileFragment;
 
 public class HomeActivity extends AppCompatActivity {
     private BottomNavigationView bottomNavigationView;
-    private MaterialButton learnButton;
-    private MaterialButton reviewButton;
+    private HomeFragment homeFragment;
+    private ProfileFragment profileFragment;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -21,39 +22,38 @@ public class HomeActivity extends AppCompatActivity {
         }
         setContentView(R.layout.activity_home);
 
-        // 初始化视图
-        initViews();
-        // 设置底部导航栏
-        setupBottomNavigation();
+        // 初始化Fragment
+        initFragments();
+        // 初始化底部导航栏
+        initBottomNavigation();
+        // 默认显示首页Fragment
+        showFragment(homeFragment);
     }
 
-    private void initViews() {
-        learnButton = findViewById(R.id.btn_learn);
-        reviewButton = findViewById(R.id.btn_review);
+    private void initFragments() {
+        homeFragment = new HomeFragment();
+        profileFragment = new ProfileFragment();
+    }
+
+    private void initBottomNavigation() {
         bottomNavigationView = findViewById(R.id.bottom_navigation);
-        
-        // 获取并显示随机单词
-        TextView wordTextView = findViewById(R.id.tv_word);
-        WordDao wordDao = new WordDao(this);
-        String randomWord = wordDao.getRandomWordSpelling();
-        if (randomWord != null) {
-            // 将单词首字母转换为大写
-            String capitalizedWord = randomWord.substring(0, 1).toUpperCase() + randomWord.substring(1);
-            wordTextView.setText(capitalizedWord);
-        }
-    }
-
-    private void setupBottomNavigation() {
         bottomNavigationView.setSelectedItemId(R.id.nav_home); // 默认选中首页
         bottomNavigationView.setOnItemSelectedListener(item -> {
             int itemId = item.getItemId();
             if (itemId == R.id.nav_home) {
+                showFragment(homeFragment);
                 return true;
             } else if (itemId == R.id.nav_profile) {
-                // TODO: 切换到个人中心页面
+                showFragment(profileFragment);
                 return true;
             }
             return false;
         });
+    }
+
+    private void showFragment(Fragment fragment) {
+        FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
+        transaction.replace(R.id.fragment_container, fragment);
+        transaction.commit();
     }
 }
