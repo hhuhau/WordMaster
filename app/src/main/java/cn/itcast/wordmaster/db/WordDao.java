@@ -28,8 +28,9 @@ public class WordDao {
      */
     public List<Word> getLearningBatch() {
         List<Word> batch = new ArrayList<>();
-        // 优先获取未学习的单词（correctCount = 0）
-        String sql = "SELECT * FROM word WHERE correctCount = 0 ORDER BY RANDOM() LIMIT 10";
+        
+        // 直接随机抽取10个correctCount < 3的单词
+        String sql = "SELECT * FROM word WHERE correctCount < 3 ORDER BY RANDOM() LIMIT 10";
         
         Cursor cursor = null;
         try {
@@ -39,15 +40,16 @@ public class WordDao {
                 batch.add(word);
             }
 
-            // 如果不足10个，补充需要复习的单词
-            if (batch.size() < 10) {
-                String supplementSql = "SELECT * FROM word WHERE correctCount > 0 AND correctCount < 3 AND (lastReviewed IS NULL OR nextDueOffset > 0) ORDER BY nextDueOffset ASC LIMIT ?";
-                Cursor supplementCursor = db.rawQuery(supplementSql, new String[]{String.valueOf(10 - batch.size())});
-                while (supplementCursor != null && supplementCursor.moveToNext()) {
-                    Word word = cursorToWord(supplementCursor);
+            // 如果没有正在学习的单词（可能所有单词都已经学完了）
+            if (batch.isEmpty()) {
+                // 获取新的10个未学习的单词
+                String newSql = "SELECT * FROM word WHERE correctCount = 0 ORDER BY RANDOM() LIMIT 10";
+                Cursor newCursor = db.rawQuery(newSql, null);
+                while (newCursor != null && newCursor.moveToNext()) {
+                    Word word = cursorToWord(newCursor);
                     batch.add(word);
                 }
-                supplementCursor.close();
+                newCursor.close();
             }
         } catch (Exception e) {
             Log.e(TAG, "Error getting learning batch: " + e.getMessage());
@@ -57,6 +59,24 @@ public class WordDao {
             }
         }
         return batch;
+    }
+
+    /**
+     * 检查当前批次是否学习时间过长（超过7天）
+     */
+    private boolean isLearningTooLong(List<Word> batch) {
+        if (batch.isEmpty()) return false;
+        
+        long currentTime = System.currentTimeMillis();
+        long sevenDaysAgo = currentTime - (7 * 24 * 60 * 60 * 1000); // 7天前的时间戳
+        
+        // 检查第一个单词的最后复习时间
+        Word firstWord = batch.get(0);
+        String lastReviewed = firstWord.getLastReviewed();
+        if (lastReviewed == null) return false;
+        
+        long lastReviewTime = Long.parseLong(lastReviewed);
+        return lastReviewTime < sevenDaysAgo;
     }
 
     /**
@@ -198,7 +218,10 @@ public class WordDao {
     }
 
     public Word getWordById(int wordId) {
-        String[] columns = {"wordId", "spelling", "phonetic", "meaning", "bookId"};
+        String[] columns = {
+            "wordId", "spelling", "phonetic", "meaning", "bookId",
+            "correctCount", "lastReviewed", "nextDueOffset" // 添加这些字段以确保能够正确更新
+        };
         String selection = "wordId = ?";
         String[] selectionArgs = {String.valueOf(wordId)};
 
@@ -212,6 +235,9 @@ public class WordDao {
                 word.setPhonetic(cursor.getString(cursor.getColumnIndexOrThrow("phonetic")));
                 word.setMeaning(cursor.getString(cursor.getColumnIndexOrThrow("meaning")));
                 word.setBookId(cursor.getString(cursor.getColumnIndexOrThrow("bookId")));
+                word.setCorrectCount(cursor.getInt(cursor.getColumnIndexOrThrow("correctCount")));
+                word.setLastReviewed(cursor.getString(cursor.getColumnIndexOrThrow("lastReviewed")));
+                word.setNextDueOffset(cursor.getInt(cursor.getColumnIndexOrThrow("nextDueOffset")));
                 return word;
             }
         } catch (Exception e) {

@@ -25,6 +25,7 @@ public class LoginActivity extends AppCompatActivity {
         TextInputLayout phoneInputLayout = findViewById(R.id.phoneInputLayout);
         TextInputLayout passwordInputLayout = findViewById(R.id.passwordInputLayout);
         TextView registerLink = findViewById(R.id.registerLink);
+        TextView forgotPasswordLink = findViewById(R.id.forgotPasswordLink);
 
         setupInputLayout(phoneInputLayout, "请输入手机号");
         setupInputLayout(passwordInputLayout, "请输入密码");
@@ -32,6 +33,12 @@ public class LoginActivity extends AppCompatActivity {
         // 设置快速注册链接的点击事件
         registerLink.setOnClickListener(v -> {
             Intent intent = new Intent(LoginActivity.this, RegisterActivity.class);
+            startActivity(intent);
+        });
+        
+        // 设置找回密码链接的点击事件
+        forgotPasswordLink.setOnClickListener(v -> {
+            Intent intent = new Intent(LoginActivity.this, ForgotPasswordActivity.class);
             startActivity(intent);
         });
 
