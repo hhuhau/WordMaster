@@ -2,6 +2,7 @@ package cn.itcast.wordmaster;
 
 import android.os.Bundle;
 import android.widget.Toast;
+import android.widget.ImageView;
 import androidx.appcompat.app.AppCompatActivity;
 import com.google.android.material.textfield.TextInputLayout;
 import com.google.android.material.button.MaterialButton;
@@ -13,7 +14,15 @@ public class RegisterActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        // 隐藏ActionBar
+        if (getSupportActionBar() != null) {
+            getSupportActionBar().hide();
+        }
         setContentView(R.layout.activity_register);
+
+        // 设置返回按钮点击事件
+        ImageView backButton = findViewById(R.id.backButton);
+        backButton.setOnClickListener(v -> finish());
 
         // 初始化所有输入框
         TextInputLayout usernameInputLayout = findViewById(R.id.usernameInputLayout);
