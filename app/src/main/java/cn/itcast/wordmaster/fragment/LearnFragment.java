@@ -120,7 +120,11 @@ public class LearnFragment extends Fragment {
     }
 
     private void loadBatchAndShowFirst() {
-        batch = wordDao.getLearningBatch();
+        // 从SharedPreferences获取学习单词量设置
+        android.content.SharedPreferences prefs = requireActivity().getSharedPreferences("study_settings", android.content.Context.MODE_PRIVATE);
+        int batchSize = prefs.getInt("learn_count", 10); // 默认为10个
+        
+        batch = wordDao.getLearningBatch(batchSize);
         if (!batch.isEmpty()) {
             currentIndex = 0;
             hasAnsweredWrong = false;

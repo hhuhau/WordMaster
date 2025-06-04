@@ -1,0 +1,141 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="#FFFFFF">
+
+    <!-- 顶部标题栏 -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:padding="16dp">
+
+        <ImageView
+            android:id="@+id/backButton"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:src="@drawable/ic_back"
+            android:layout_gravity="center_vertical" />
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="账号设置"
+            android:textSize="20sp"
+            android:textColor="#333333"
+            android:gravity="center" />
+
+        <Space
+            android:layout_width="24dp"
+            android:layout_height="24dp" />
+    </LinearLayout>
+
+    <!-- 分割线 -->
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="#EEEEEE" />
+
+    <!-- 用户名输入框 -->
+    <com.google.android.material.textfield.TextInputLayout
+        android:id="@+id/usernameInputLayout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="20dp"
+        android:layout_marginStart="20dp"
+        android:layout_marginEnd="20dp"
+        app:boxBackgroundColor="@android:color/white"
+        app:boxStrokeColor="@color/light_blue_border"
+        app:hintEnabled="true"
+        app:hintTextColor="@color/light_blue_border"
+        app:boxStrokeWidth="1dp"
+        app:boxStrokeWidthFocused="2dp"
+        app:hintTextAppearance="@style/TextInputLayoutHint">
+
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/usernameInput"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textSize="18sp"
+            android:paddingLeft="20dp"
+            android:paddingRight="20dp"
+            android:paddingTop="28dp"
+            android:paddingBottom="20dp" />
+    </com.google.android.material.textfield.TextInputLayout>
+
+    <!-- 手机号输入框 -->
+    <com.google.android.material.textfield.TextInputLayout
+        android:id="@+id/phoneInputLayout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="20dp"
+        android:layout_marginStart="20dp"
+        android:layout_marginEnd="20dp"
+        app:boxBackgroundColor="@android:color/white"
+        app:boxStrokeColor="@color/light_blue_border"
+        app:hintEnabled="true"
+        app:hintTextColor="@color/light_blue_border"
+        app:boxStrokeWidth="1dp"
+        app:boxStrokeWidthFocused="2dp"
+        app:hintTextAppearance="@style/TextInputLayoutHint">
+
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/phoneInput"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:inputType="phone"
+            android:textSize="18sp"
+            android:paddingLeft="20dp"
+            android:paddingRight="20dp"
+            android:paddingTop="28dp"
+            android:paddingBottom="20dp" />
+    </com.google.android.material.textfield.TextInputLayout>
+
+    <!-- 密码输入框 -->
+    <com.google.android.material.textfield.TextInputLayout
+        android:id="@+id/passwordInputLayout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="20dp"
+        android:layout_marginStart="20dp"
+        android:layout_marginEnd="20dp"
+        app:boxBackgroundColor="@android:color/white"
+        app:boxStrokeColor="@color/light_blue_border"
+        app:hintEnabled="true"
+        app:hintTextColor="@color/light_blue_border"
+        app:boxStrokeWidth="1dp"
+        app:boxStrokeWidthFocused="2dp"
+        app:hintTextAppearance="@style/TextInputLayoutHint"
+        app:endIconMode="password_toggle">
+
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/passwordInput"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:inputType="textPassword"
+            android:textSize="18sp"
+            android:paddingLeft="20dp"
+            android:paddingRight="20dp"
+            android:paddingTop="28dp"
+            android:paddingBottom="20dp" />
+    </com.google.android.material.textfield.TextInputLayout>
+
+    <!-- 保存按钮 -->
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/saveButton"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="40dp"
+        android:layout_marginStart="20dp"
+        android:layout_marginEnd="20dp"
+        android:text="保存"
+        android:textSize="18sp"
+        android:padding="15dp"
+        android:backgroundTint="@color/light_blue_border"
+        app:cornerRadius="8dp" />
+
+</LinearLayout>

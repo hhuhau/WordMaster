@@ -24,13 +24,14 @@ public class WordDao {
     }
 
     /**
-     * 获取一组学习单词（10个）
+     * 获取一组学习单词
+     * @param batchSize 每批次单词数量，默认为10
      */
-    public List<Word> getLearningBatch() {
+    public List<Word> getLearningBatch(int batchSize) {
         List<Word> batch = new ArrayList<>();
         
-        // 直接随机抽取10个correctCount < 3的单词
-        String sql = "SELECT * FROM word WHERE correctCount < 3 ORDER BY RANDOM() LIMIT 10";
+        // 直接随机抽取指定数量的correctCount < 3的单词
+        String sql = "SELECT * FROM word WHERE correctCount < 3 ORDER BY RANDOM() LIMIT " + batchSize;
         
         Cursor cursor = null;
         try {
@@ -42,8 +43,8 @@ public class WordDao {
 
             // 如果没有正在学习的单词（可能所有单词都已经学完了）
             if (batch.isEmpty()) {
-                // 获取新的10个未学习的单词
-                String newSql = "SELECT * FROM word WHERE correctCount = 0 ORDER BY RANDOM() LIMIT 10";
+                // 获取新的未学习的单词
+                String newSql = "SELECT * FROM word WHERE correctCount = 0 ORDER BY RANDOM() LIMIT " + batchSize;
                 Cursor newCursor = db.rawQuery(newSql, null);
                 while (newCursor != null && newCursor.moveToNext()) {
                     Word word = cursorToWord(newCursor);
@@ -59,6 +60,14 @@ public class WordDao {
             }
         }
         return batch;
+    }
+    
+    /**
+     * 获取一组学习单词（默认10个）
+     * 为了保持向后兼容
+     */
+    public List<Word> getLearningBatch() {
+        return getLearningBatch(10);
     }
 
     /**
@@ -285,5 +294,59 @@ public class WordDao {
         }
 
         return wordList;
+    }
+
+    /**
+     * 获取指定时间范围内学习完成的单词数量
+     * 学习完成的定义是：correctCount 达到 3 且 lastReviewed 在指定时间范围内
+     * 
+     * @param startTime 开始时间戳
+     * @param endTime 结束时间戳
+     * @return 学习完成的单词数量
+     */
+    public int getCompletedWordCountForDate(long startTime, long endTime) {
+        int count = 0;
+        String sql = "SELECT COUNT(*) FROM word WHERE correctCount >= 3 AND lastReviewed >= ? AND lastReviewed < ?";
+        
+        Cursor cursor = null;
+        try {
+            cursor = db.rawQuery(sql, new String[]{String.valueOf(startTime), String.valueOf(endTime)});
+            if (cursor != null && cursor.moveToFirst()) {
+                count = cursor.getInt(0);
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "Error getting completed word count: " + e.getMessage());
+        } finally {
+            if (cursor != null) {
+                cursor.close();
+            }
+        }
+        
+        return count;
+    }
+    
+    /**
+     * 获取指定日期范围内每天学习完成的单词数量
+     * 
+     * @param startDate 开始日期的时间戳
+     * @param endDate 结束日期的时间戳
+     * @return 每天学习完成的单词数量列表
+     */
+    public List<Integer> getCompletedWordCountsByDateRange(long startDate, long endDate) {
+        List<Integer> counts = new ArrayList<>();
+        
+        // 计算天数
+        int days = (int) ((endDate - startDate) / (24 * 60 * 60 * 1000));
+        
+        // 获取每天的学习完成单词数量
+        for (int i = 0; i < days; i++) {
+            long dayStart = startDate + i * (24 * 60 * 60 * 1000);
+            long dayEnd = dayStart + (24 * 60 * 60 * 1000);
+            
+            int count = getCompletedWordCountForDate(dayStart, dayEnd);
+            counts.add(count);
+        }
+        
+        return counts;
     }
 }

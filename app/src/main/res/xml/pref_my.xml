@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- 学习设置 -->
+    <PreferenceCategory android:title="">
+        <Preference
+            android:key="pref_study"
+            android:title="学习设置"
+            android:summary="调整学习计划、复习参数" />
+    </PreferenceCategory>
+
+    <!-- 账号设置 -->
+    <PreferenceCategory android:title="">
+        <Preference
+            android:key="pref_account"
+            android:title="账号设置"
+            android:summary="修改密码、绑定手机号等" />
+    </PreferenceCategory>
+
+    <!-- 我的数据 -->
+    <PreferenceCategory android:title="">
+        <Preference
+            android:key="pref_data"
+            android:title="我的数据"
+            android:summary="查看学习统计、导出/清空数据" />
+    </PreferenceCategory>
+
+    <!-- 空行/分隔 -->
+    <PreferenceCategory android:title="" android:summary=" " />
+
+    <!-- 退出登录 -->
+    <PreferenceCategory android:title="">
+        <Preference
+            android:key="pref_logout"
+            android:title="退出登录"
+            android:summary="退出当前账号" />
+    </PreferenceCategory>
+
+</PreferenceScreen>

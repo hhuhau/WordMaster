@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_margin="8dp"
+    app:cardCornerRadius="8dp"
+    app:cardElevation="2dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:padding="16dp">
+
+        <!-- 词书封面 -->
+        <ImageView
+            android:id="@+id/iv_cover"
+            android:layout_width="80dp"
+            android:layout_height="110dp"
+            android:scaleType="fitCenter"
+            android:src="@drawable/ic_launcher_background" />
+
+        <!-- 词书信息 -->
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:layout_marginStart="16dp"
+            android:orientation="vertical">
+
+            <!-- 词书名称 -->
+            <TextView
+                android:id="@+id/tv_book_name"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="词书名称"
+                android:textSize="18sp"
+                android:textColor="#333333"
+                android:textStyle="bold"
+                android:maxLines="1"
+                android:ellipsize="end" />
+
+            <!-- 词书描述 -->
+            <TextView
+                android:id="@+id/tv_book_description"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:text="词书描述信息"
+                android:textSize="12sp"
+                android:textColor="#666666"
+                android:maxLines="2"
+                android:ellipsize="end" />
+                
+            <!-- 底部信息容器 -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1"
+                android:orientation="horizontal"
+                android:gravity="bottom">
+                
+                <!-- 词书单词数量 -->
+                <TextView
+                    android:id="@+id/tv_book_word_count"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="6000词"
+                    android:textSize="12sp"
+                    android:textColor="#666666" />
+    
+                <!-- 空白间隔 -->
+                <View
+                    android:layout_width="0dp"
+                    android:layout_height="1dp"
+                    android:layout_weight="1" />
+                    
+                <!-- 正在学习标记 -->
+                <TextView
+                    android:id="@+id/tv_learning"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="正在学习"
+                    android:textSize="14sp"
+                    android:textColor="#2196F3"
+                    android:visibility="gone" />
+            </LinearLayout>
+        </LinearLayout>
+    </LinearLayout>
+</androidx.cardview.widget.CardView>

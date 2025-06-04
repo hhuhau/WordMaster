@@ -2,6 +2,7 @@ package cn.itcast.wordmaster;
 
 import android.os.Bundle;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.view.View;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -66,6 +67,11 @@ public class LoginActivity extends AppCompatActivity {
             boolean success = userDao.login(phoneNumber, password);
 
             if (success) {
+                // 保存登录的手机号到SharedPreferences
+                SharedPreferences.Editor editor = getSharedPreferences("user_info", MODE_PRIVATE).edit();
+                editor.putString("phone_number", phoneNumber);
+                editor.apply();
+
                 Toast.makeText(this, "登录成功", Toast.LENGTH_SHORT).show();
                 // 跳转到单词列表页面，并传递词典ID
                 Intent intent = new Intent(LoginActivity.this, HomeActivity.class);

@@ -1,0 +1,292 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="#FFFFFF">
+
+    <!-- 顶部标题栏 -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:padding="16dp">
+
+        <ImageView
+            android:id="@+id/backButton"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:src="@drawable/ic_back"
+            android:layout_gravity="center_vertical" />
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="概览"
+            android:textSize="20sp"
+            android:textColor="#333333"
+            android:gravity="center" />
+
+        <ImageView
+            android:id="@+id/refreshButton"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:src="@drawable/ic_refresh"
+            android:layout_gravity="center_vertical" />
+    </LinearLayout>
+
+    <!-- 分割线 -->
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="#EEEEEE" />
+    
+    <!-- 单词输入量标题 -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:padding="16dp"
+        android:gravity="center_vertical">
+        
+        <ImageView
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:src="@drawable/ic_column"
+            android:layout_marginEnd="8dp" />
+            
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="单词输入量"
+            android:textSize="18sp"
+            android:textColor="#333333"
+            android:textStyle="bold" />
+    </LinearLayout>
+    
+    <!-- 切换Tab -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:paddingStart="16dp"
+        android:paddingEnd="16dp">
+        
+        <!-- 最近一周 Tab -->
+        <LinearLayout
+            android:id="@+id/weekTab"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:gravity="center">
+            
+            <TextView
+                android:id="@+id/weekTabText"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="最近一周"
+                android:textSize="16sp"
+                android:textColor="#333333"
+                android:padding="8dp" />
+                
+            <View
+                android:id="@+id/weekIndicator"
+                android:layout_width="40dp"
+                android:layout_height="3dp"
+                android:background="#FF9800" />
+        </LinearLayout>
+        
+        <!-- 按月查看 Tab -->
+        <LinearLayout
+            android:id="@+id/monthTab"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:gravity="center">
+            
+            <TextView
+                android:id="@+id/monthTabText"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="按月查看"
+                android:textSize="16sp"
+                android:textColor="#AAAAAA"
+                android:padding="8dp" />
+                
+            <View
+                android:id="@+id/monthIndicator"
+                android:layout_width="40dp"
+                android:layout_height="3dp"
+                android:background="#FF9800"
+                android:visibility="invisible" />
+        </LinearLayout>
+    </LinearLayout>
+    
+    <!-- 图表容器 -->
+    <LinearLayout
+        android:id="@+id/chartContainer"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:orientation="vertical"
+        android:padding="16dp">
+        
+        <!-- 这里将放置图表，使用自定义视图或第三方图表库 -->
+        <!-- 示例图表（实际应用中应该使用图表库） -->
+        <FrameLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="#F5F5F5">
+            
+            <!-- 图表图例 -->
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_gravity="top|end"
+                android:layout_margin="16dp">
+                
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:layout_marginEnd="16dp">
+                    
+                    <View
+                        android:layout_width="12dp"
+                        android:layout_height="12dp"
+                        android:background="#FF9800"
+                        android:layout_marginEnd="4dp" />
+                        
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="学习"
+                        android:textSize="12sp"
+                        android:textColor="#333333" />
+                </LinearLayout>
+                
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical">
+                    
+                    <View
+                        android:layout_width="12dp"
+                        android:layout_height="12dp"
+                        android:background="#9C27B0"
+                        android:layout_marginEnd="4dp" />
+                        
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="复习"
+                        android:textSize="12sp"
+                        android:textColor="#333333" />
+                </LinearLayout>
+            </LinearLayout>
+            
+            <!-- 这里应该使用自定义视图或图表库来绘制实际的图表 -->
+            <!-- 示例文本，实际应用中应该替换为图表 -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="图表区域 - 需要使用图表库实现"
+                android:layout_gravity="center"
+                android:textColor="#AAAAAA" />
+        </FrameLayout>
+    </LinearLayout>
+    
+    <!-- 统计信息 (移到图表下方，水平居中) -->
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:padding="16dp"
+        android:layout_gravity="center_horizontal">
+        
+        <!-- 当日学习 -->
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:layout_marginEnd="32dp">
+            
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="当日学习"
+                android:textSize="14sp"
+                android:textColor="#666666" />
+                
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_marginTop="4dp">
+                
+                <TextView
+                    android:id="@+id/todayLearningCount"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="52"
+                    android:textSize="24sp"
+                    android:textStyle="bold"
+                    android:textColor="#333333" />
+                    
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="词"
+                    android:textSize="16sp"
+                    android:textColor="#666666"
+                    android:layout_marginStart="4dp" />
+            </LinearLayout>
+        </LinearLayout>
+        
+        <!-- 当日复习 -->
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+            
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="当日复习"
+                android:textSize="14sp"
+                android:textColor="#666666" />
+                
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_marginTop="4dp">
+                
+                <TextView
+                    android:id="@+id/todayReviewCount"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="104"
+                    android:textSize="24sp"
+                    android:textStyle="bold"
+                    android:textColor="#333333" />
+                    
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="词"
+                    android:textSize="16sp"
+                    android:textColor="#666666"
+                    android:layout_marginStart="4dp" />
+            </LinearLayout>
+        </LinearLayout>
+    </LinearLayout>
+</LinearLayout>

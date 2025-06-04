@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:background="#FFFFFF"
+    android:padding="16dp">
+
+    <TextView
+        android:id="@+id/tv_selector_title"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="选择数量"
+        android:textSize="18sp"
+        android:textColor="#333333"
+        android:gravity="center"
+        android:paddingBottom="16dp" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
+        <!-- 5个选项 -->
+        <TextView
+            android:id="@+id/tv_count_5"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="5个"
+            android:textSize="16sp"
+            android:textColor="#333333"
+            android:padding="16dp"
+            android:gravity="center"
+            android:background="?android:attr/selectableItemBackground"
+            android:clickable="true"
+            android:focusable="true" />
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:background="#EEEEEE" />
+
+        <!-- 10个选项 -->
+        <TextView
+            android:id="@+id/tv_count_10"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="10个"
+            android:textSize="16sp"
+            android:textColor="#333333"
+            android:padding="16dp"
+            android:gravity="center"
+            android:background="?android:attr/selectableItemBackground"
+            android:clickable="true"
+            android:focusable="true" />
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:background="#EEEEEE" />
+
+        <!-- 15个选项 -->
+        <TextView
+            android:id="@+id/tv_count_15"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="15个"
+            android:textSize="16sp"
+            android:textColor="#333333"
+            android:padding="16dp"
+            android:gravity="center"
+            android:background="?android:attr/selectableItemBackground"
+            android:clickable="true"
+            android:focusable="true" />
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:background="#EEEEEE" />
+
+        <!-- 20个选项 -->
+        <TextView
+            android:id="@+id/tv_count_20"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="20个"
+            android:textSize="16sp"
+            android:textColor="#333333"
+            android:padding="16dp"
+            android:gravity="center"
+            android:background="?android:attr/selectableItemBackground"
+            android:clickable="true"
+            android:focusable="true" />
+    </LinearLayout>
+</LinearLayout>

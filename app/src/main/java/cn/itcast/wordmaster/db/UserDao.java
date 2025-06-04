@@ -151,4 +151,66 @@ public class UserDao {
         int rowsAffected = db.update("user", values, updateSelection, updateSelectionArgs);
         return rowsAffected > 0;
     }
+
+    /**
+     * 获取用户信息
+     * @param phoneNumber 手机号
+     * @return 用户信息数组：[用户名, 手机号, 密码]
+     */
+    public String[] getUserInfo(String phoneNumber) {
+        String[] columns = {"username", "phoneNumber", "password"};
+        String selection = "phoneNumber = ?";
+        String[] selectionArgs = {phoneNumber};
+        String[] userInfo = new String[3];
+
+        Cursor cursor = null;
+        try {
+            cursor = db.query("user", columns, selection, selectionArgs, null, null, null);
+            
+            if (cursor != null && cursor.moveToFirst()) {
+                userInfo[0] = cursor.getString(cursor.getColumnIndex("username"));
+                userInfo[1] = cursor.getString(cursor.getColumnIndex("phoneNumber"));
+                userInfo[2] = cursor.getString(cursor.getColumnIndex("password"));
+                return userInfo;
+            }
+        } catch (android.database.sqlite.SQLiteException e) {
+            Log.e(TAG, "Error getting user info: " + e.getMessage());
+        } finally {
+            if (cursor != null) {
+                cursor.close();
+            }
+        }
+        return null;
+    }
+
+    /**
+     * 更新用户信息
+     * @param oldPhoneNumber 原手机号
+     * @param newUsername 新用户名
+     * @param newPhoneNumber 新手机号
+     * @param newPassword 新密码
+     * @return 更新是否成功
+     */
+    public boolean updateUserInfo(String oldPhoneNumber, String newUsername, String newPhoneNumber, String newPassword) {
+        // 如果新手机号与原手机号不同，且新手机号已存在，则更新失败
+        if (!oldPhoneNumber.equals(newPhoneNumber) && isPhoneNumberExists(newPhoneNumber)) {
+            return false;
+        }
+
+        ContentValues values = new ContentValues();
+        values.put("username", newUsername);
+        values.put("phoneNumber", newPhoneNumber);
+        values.put("password", newPassword);
+
+        String selection = "phoneNumber = ?";
+        String[] selectionArgs = {oldPhoneNumber};
+
+        try {
+            int rowsAffected = db.update("user", values, selection, selectionArgs);
+            return rowsAffected > 0;
+        } catch (android.database.sqlite.SQLiteException e) {
+            Log.e(TAG, "Error updating user info: " + e.getMessage());
+            return false;
+        }
+    }
 }

@@ -12,6 +12,11 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.WordMaster"
         tools:targetApi="31">
+        
+        <activity
+            android:name=".WordbookListActivity"
+            android:exported="false" />
+            
         <activity
             android:name=".MainActivity"
             android:exported="true">
@@ -21,6 +26,10 @@
             </intent-filter>
         </activity>
         
+        <activity
+            android:name=".HomeActivity"
+            android:exported="false" />
+            
         <activity
             android:name=".LoginActivity"
             android:exported="false" />
@@ -33,9 +42,24 @@
             android:name=".ForgotPasswordActivity"
             android:exported="false" />
             
-
         <activity
-            android:name=".HomeActivity"
+            android:name=".StudySettingsActivity"
+            android:exported="false" />
+            
+        <activity
+            android:name=".AccountSettingsActivity"
+            android:exported="false" />
+            
+        <activity
+            android:name=".MyDataActivity"
+            android:exported="false" />
+            
+        <activity
+            android:name=".DataOverviewActivity"
+            android:exported="false" />
+            
+        <activity
+            android:name=".DataCalendarActivity"
             android:exported="false" />
     </application>
 
