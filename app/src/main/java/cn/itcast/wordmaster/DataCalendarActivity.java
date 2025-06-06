@@ -74,7 +74,7 @@ public class DataCalendarActivity extends AppCompatActivity {
      * @return 是否有学习记录
      */
     private boolean checkDateLearningStatus(long dateInMillis) {
-        // 计算当天开始时间
+        // 计算当天开始和结束时间戳
         Calendar calendar = Calendar.getInstance();
         calendar.setTimeInMillis(dateInMillis);
         calendar.set(Calendar.HOUR_OF_DAY, 0);
@@ -83,22 +83,32 @@ public class DataCalendarActivity extends AppCompatActivity {
         calendar.set(Calendar.MILLISECOND, 0);
         long startTime = calendar.getTimeInMillis();
         
-        // 计算当天结束时间
         calendar.set(Calendar.HOUR_OF_DAY, 23);
         calendar.set(Calendar.MINUTE, 59);
         calendar.set(Calendar.SECOND, 59);
         calendar.set(Calendar.MILLISECOND, 999);
         long endTime = calendar.getTimeInMillis();
         
-        // 查询当天学习记录
-        int count = wordDao.getCompletedWordCountForDate(startTime, endTime);
+        // 查询当天学习和复习记录
+        int learningCount = wordDao.getCompletedWordCountForDate(startTime, endTime);
+        int reviewCount = wordDao.getReviewedWordCountForDate(startTime, endTime);
         
-        // 如果有学习记录，显示提示
-        if (count > 0) {
-            Toast.makeText(this, "当日学习了 " + count + " 个单词", Toast.LENGTH_SHORT).show();
+        // 如果有学习或复习记录，显示提示
+        if (learningCount > 0 || reviewCount > 0) {
+            String message = "当日";
+            if (learningCount > 0) {
+                message += "学习了 " + learningCount + " 个单词";
+            }
+            if (reviewCount > 0) {
+                if (learningCount > 0) {
+                    message += "，";
+                }
+                message += "复习了 " + reviewCount + " 个单词";
+            }
+            Toast.makeText(this, message, Toast.LENGTH_SHORT).show();
             return true;
         } else {
-            Toast.makeText(this, "当日没有学习记录", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "当日无学习记录", Toast.LENGTH_SHORT).show();
             return false;
         }
     }

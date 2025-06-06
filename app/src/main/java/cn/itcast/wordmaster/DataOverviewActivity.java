@@ -11,6 +11,7 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
+import android.util.Log;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
@@ -187,7 +188,6 @@ public class DataOverviewActivity extends AppCompatActivity {
     
     private void loadWeekChartData() {
         // 获取最近一周的数据
-        List<Integer> learningCounts = new ArrayList<>();
         List<String> dateLabels = new ArrayList<>();
         
         Calendar calendar = Calendar.getInstance();
@@ -211,8 +211,9 @@ public class DataOverviewActivity extends AppCompatActivity {
         calendar.set(Calendar.MILLISECOND, 0);
         long weekEnd = calendar.getTimeInMillis();
         
-        // 获取一周内每天的学习完成单词数量
-        List<Integer> counts = wordDao.getCompletedWordCountsByDateRange(weekStart, weekEnd);
+        // 获取一周内每天的学习和复习完成单词数量
+        List<Integer> learningCounts = wordDao.getCompletedWordCountsByDateRange(weekStart, weekEnd);
+        List<Integer> reviewCounts = wordDao.getReviewedWordCountsByDateRange(weekStart, weekEnd);
         
         // 生成日期标签
         calendar.setTimeInMillis(weekStart);
@@ -222,13 +223,14 @@ public class DataOverviewActivity extends AppCompatActivity {
         }
         
         // 更新图表
-        updateChart(dateLabels, counts);
+        updateChart(dateLabels, learningCounts, reviewCounts);
     }
     
     private void loadMonthChartData() {
         // 获取最近四个月的数据（本月及往前三个月）
         List<String> monthLabels = new ArrayList<>();
-        List<Integer> monthlyCounts = new ArrayList<>();
+        List<Integer> monthlyLearningCounts = new ArrayList<>();
+        List<Integer> monthlyReviewCounts = new ArrayList<>();
         
         Calendar calendar = Calendar.getInstance();
         SimpleDateFormat monthFormat = new SimpleDateFormat("yyyy-MM", Locale.getDefault());
@@ -254,9 +256,11 @@ public class DataOverviewActivity extends AppCompatActivity {
             endCalendar.add(Calendar.MONTH, 1);
             long monthEnd = endCalendar.getTimeInMillis();
             
-            // 获取当月学习完成的单词总数
-            int monthCount = wordDao.getCompletedWordCountForDate(monthStart, monthEnd);
-            monthlyCounts.add(0, monthCount); // 添加到列表前端，保持时间顺序
+            // 获取当月学习和复习完成的单词总数
+            int monthLearningCount = wordDao.getCompletedWordCountForDate(monthStart, monthEnd);
+            int monthReviewCount = wordDao.getReviewedWordCountForDate(monthStart, monthEnd);
+            monthlyLearningCounts.add(0, monthLearningCount); // 添加到列表前端，保持时间顺序
+            monthlyReviewCounts.add(0, monthReviewCount); // 添加到列表前端，保持时间顺序
             
             // 添加月份标签
             String monthLabel = new SimpleDateFormat("MM月", Locale.getDefault()).format(calendar.getTime());
@@ -264,11 +268,11 @@ public class DataOverviewActivity extends AppCompatActivity {
         }
         
         // 更新图表
-        updateChart(monthLabels, monthlyCounts);
+        updateChart(monthLabels, monthlyLearningCounts, monthlyReviewCounts);
     }
     
     private void loadTodayStats() {
-        // 获取今日学习统计（correctCount达到3且时间戳是今天的单词数量）
+        // 获取今天的开始和结束时间戳
         Calendar calendar = Calendar.getInstance();
         calendar.set(Calendar.HOUR_OF_DAY, 0);
         calendar.set(Calendar.MINUTE, 0);
@@ -276,41 +280,156 @@ public class DataOverviewActivity extends AppCompatActivity {
         calendar.set(Calendar.MILLISECOND, 0);
         long todayStart = calendar.getTimeInMillis();
         
-        calendar.add(Calendar.DAY_OF_MONTH, 1);
-        long tomorrowStart = calendar.getTimeInMillis();
+        calendar.set(Calendar.HOUR_OF_DAY, 23);
+        calendar.set(Calendar.MINUTE, 59);
+        calendar.set(Calendar.SECOND, 59);
+        calendar.set(Calendar.MILLISECOND, 999);
+        long todayEnd = calendar.getTimeInMillis();
         
-        // 查询数据库获取今日学习完成的单词数量
-        int learningCount = wordDao.getCompletedWordCountForDate(todayStart, tomorrowStart);
-        todayLearningCount.setText(String.valueOf(learningCount));
-        
-        // 当日复习数量设置为0，因为复习功能尚未实现
-        todayReviewCount.setText("0");
+        // 获取今日学习和复习数量
+        new Thread(() -> {
+            int todayLearningCount = wordDao.getCompletedWordCountForDate(todayStart, todayEnd);
+            int todayReviewCount = wordDao.getReviewedWordCountForDate(todayStart, todayEnd);
+            
+            runOnUiThread(() -> {
+                TextView todayLearningCountView = findViewById(R.id.todayLearningCount);
+                todayLearningCountView.setText(String.valueOf(todayLearningCount));
+                
+                TextView todayReviewCountView = findViewById(R.id.todayReviewCount);
+                todayReviewCountView.setText(String.valueOf(todayReviewCount));
+            });
+        }).start();
     }
+    
+    private void loadWeeklyStats() {
+         // 获取最近7天的日期范围
+         Calendar calendar = Calendar.getInstance();
+         calendar.add(Calendar.DAY_OF_MONTH, -6); // 往前推6天，加上今天共7天
+         calendar.set(Calendar.HOUR_OF_DAY, 0);
+         calendar.set(Calendar.MINUTE, 0);
+         calendar.set(Calendar.SECOND, 0);
+         calendar.set(Calendar.MILLISECOND, 0);
+         long startDate = calendar.getTimeInMillis();
+         
+         calendar.add(Calendar.DAY_OF_MONTH, 6); // 回到今天
+         calendar.set(Calendar.HOUR_OF_DAY, 23);
+         calendar.set(Calendar.MINUTE, 59);
+         calendar.set(Calendar.SECOND, 59);
+         calendar.set(Calendar.MILLISECOND, 999);
+         long endDate = calendar.getTimeInMillis();
+         
+         // 在后台线程中获取数据
+         new Thread(() -> {
+             List<Integer> weeklyLearningData = wordDao.getCompletedWordCountsByDateRange(startDate, endDate);
+             List<Integer> weeklyReviewData = wordDao.getReviewedWordCountsByDateRange(startDate, endDate);
+             
+             runOnUiThread(() -> {
+                 // 这里应该更新图表显示，显示学习和复习两组数据
+                 // 学习数据用橙色(#FF9800)，复习数据用紫色(#9C27B0)
+                 Log.d("DataOverview", "Weekly learning data: " + weeklyLearningData.toString());
+                 Log.d("DataOverview", "Weekly review data: " + weeklyReviewData.toString());
+             });
+         }).start();
+     }
+     
+     private void loadMonthlyStats() {
+          // 获取当前月份的日期范围
+          Calendar calendar = Calendar.getInstance();
+          calendar.set(Calendar.DAY_OF_MONTH, 1); // 设置为月初
+          calendar.set(Calendar.HOUR_OF_DAY, 0);
+          calendar.set(Calendar.MINUTE, 0);
+          calendar.set(Calendar.SECOND, 0);
+          calendar.set(Calendar.MILLISECOND, 0);
+          long startDate = calendar.getTimeInMillis();
+          
+          // 获取当月最后一天
+          calendar.set(Calendar.DAY_OF_MONTH, calendar.getActualMaximum(Calendar.DAY_OF_MONTH));
+          calendar.set(Calendar.HOUR_OF_DAY, 23);
+          calendar.set(Calendar.MINUTE, 59);
+          calendar.set(Calendar.SECOND, 59);
+          calendar.set(Calendar.MILLISECOND, 999);
+          long endDate = calendar.getTimeInMillis();
+          
+          // 在后台线程中获取数据
+          new Thread(() -> {
+              List<Integer> monthlyLearningData = wordDao.getCompletedWordCountsByDateRange(startDate, endDate);
+              List<Integer> monthlyReviewData = wordDao.getReviewedWordCountsByDateRange(startDate, endDate);
+              
+              runOnUiThread(() -> {
+                  // 这里应该更新图表显示，显示学习和复习两组数据
+                  // 学习数据用橙色(#FF9800)，复习数据用紫色(#9C27B0)
+                  Log.d("DataOverview", "Monthly learning data: " + monthlyLearningData.toString());
+                  Log.d("DataOverview", "Monthly review data: " + monthlyReviewData.toString());
+              });
+          }).start();
+      }
 
-    private void updateChart(List<String> dateLabels, List<Integer> learningCounts) {
-        // 使用MPAndroidChart库更新图表
-        List<BarEntry> learningEntries = new ArrayList<>();
+    private void updateChart(List<String> dateLabels, List<Integer> learningCounts, List<Integer> reviewCounts) {
+        // 使用MPAndroidChart库更新图表 - 堆叠条形图
+        List<BarEntry> stackedEntries = new ArrayList<>();
         
-        // 创建学习数据条目
+        // 创建堆叠数据条目 - 每个条目包含学习和复习两个值
+        // 注意：堆叠条形图中的值应该是实际的数值，不是累积值
         for (int i = 0; i < learningCounts.size(); i++) {
-            learningEntries.add(new BarEntry(i, learningCounts.get(i)));
+            float[] values = new float[2];
+            values[0] = learningCounts.get(i).floatValue(); // 学习数据在底部
+            values[1] = reviewCounts.get(i).floatValue();   // 复习数据在顶部
+            stackedEntries.add(new BarEntry(i, values));
         }
         
-        // 创建数据集
-        BarDataSet learningDataSet = new BarDataSet(learningEntries, "学习");
-        learningDataSet.setColor(ContextCompat.getColor(this, android.R.color.holo_orange_light));
-        learningDataSet.setValueTextSize(10f);
+        // 创建堆叠数据集
+        BarDataSet stackedDataSet = new BarDataSet(stackedEntries, "");
+        
+        // 设置堆叠颜色 - 学习(橙色)在底部，复习(紫色)在顶部
+        int[] colors = new int[]{
+            ContextCompat.getColor(this, R.color.learning_color), // 橙色 - 学习
+            ContextCompat.getColor(this, R.color.review_color)    // 紫色 - 复习
+        };
+        stackedDataSet.setColors(colors);
+        stackedDataSet.setValueTextSize(10f);
+        stackedDataSet.setStackLabels(new String[]{"学习", "复习"});
         
         // 创建BarData
-        BarData barData = new BarData(learningDataSet);
+        BarData barData = new BarData(stackedDataSet);
         barData.setBarWidth(0.6f);
         
         // 设置X轴标签
         barChart.getXAxis().setValueFormatter(new IndexAxisValueFormatter(dateLabels));
         
+        // 启用图例
+        barChart.getLegend().setEnabled(true);
+        barChart.getLegend().setHorizontalAlignment(com.github.mikephil.charting.components.Legend.LegendHorizontalAlignment.RIGHT);
+        barChart.getLegend().setVerticalAlignment(com.github.mikephil.charting.components.Legend.LegendVerticalAlignment.TOP);
+        barChart.getLegend().setOrientation(com.github.mikephil.charting.components.Legend.LegendOrientation.VERTICAL);
+        barChart.getLegend().setDrawInside(true);
+        barChart.getLegend().setTextSize(12f);
+        
+        // 手动设置图例条目
+        com.github.mikephil.charting.components.LegendEntry[] legendEntries = new com.github.mikephil.charting.components.LegendEntry[2];
+        legendEntries[0] = new com.github.mikephil.charting.components.LegendEntry("学习", com.github.mikephil.charting.components.Legend.LegendForm.SQUARE, 10f, 2f, null, ContextCompat.getColor(this, R.color.learning_color));
+        legendEntries[1] = new com.github.mikephil.charting.components.LegendEntry("复习", com.github.mikephil.charting.components.Legend.LegendForm.SQUARE, 10f, 2f, null, ContextCompat.getColor(this, R.color.review_color));
+        barChart.getLegend().setCustom(legendEntries);
+        
+        // 配置Y轴以确保正确的比例显示
+        barChart.getAxisLeft().setAxisMinimum(0f);
+        barChart.getAxisLeft().setGranularityEnabled(true);
+        barChart.getAxisLeft().setGranularity(1f);
+        barChart.getAxisRight().setEnabled(false);
+        
+        // 设置图表其他属性
+        barChart.setDrawValueAboveBar(true);
+        barChart.setDrawBarShadow(false);
+        barChart.setFitBars(true);
+        
         // 设置数据并刷新图表
         barChart.setData(barData);
+        barChart.getXAxis().setAxisMinimum(-0.5f);
+        barChart.getXAxis().setAxisMaximum(dateLabels.size() - 0.5f);
         barChart.invalidate();
+        
+        // 添加调试信息
+        android.util.Log.d("ChartDebug", "Learning counts: " + learningCounts.toString());
+        android.util.Log.d("ChartDebug", "Review counts: " + reviewCounts.toString());
     }
     
     /**

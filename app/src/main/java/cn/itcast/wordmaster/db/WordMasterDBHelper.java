@@ -38,7 +38,6 @@ public class WordMasterDBHelper extends SQLiteOpenHelper {
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
         // 如果需要升级数据库结构，在这里添加相应的逻辑
-        // 目前是第一个版本，暂时不需要升级逻辑
     }
 
 

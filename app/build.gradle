@@ -40,4 +40,11 @@ dependencies {
     
     // 添加MPAndroidChart库依赖 - 请确保在修改后点击「Sync Now」同步项目
     implementation 'com.github.PhilJay:MPAndroidChart:v3.1.0'
+    
+    // 添加Gson库依赖，用于JSON序列化和反序列化
+    implementation 'com.google.code.gson:gson:2.10.1'
+    
+    // 添加Glide库依赖，用于图片加载
+    implementation 'com.github.bumptech.glide:glide:4.15.1'
+    annotationProcessor 'com.github.bumptech.glide:compiler:4.15.1'
 }

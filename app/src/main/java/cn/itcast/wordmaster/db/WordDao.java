@@ -151,7 +151,7 @@ public class WordDao {
     /**
      * 计算下次复习间隔
      */
-    private int calcNextDueOffset(int correctCount) {
+    public int calcNextDueOffset(int correctCount) {
         if (correctCount <= 1) return 3;
         return 3 * (1 << (correctCount - 1));
     }
@@ -298,7 +298,8 @@ public class WordDao {
 
     /**
      * 获取指定时间范围内学习完成的单词数量
-     * 学习完成的定义是：correctCount 达到 3 且 lastReviewed 在指定时间范围内
+     * 学习完成的定义是：correctCount = 3 且 lastReviewed 在指定时间范围内
+     * 注意：只统计首次学会的单词，不包括复习
      * 
      * @param startTime 开始时间戳
      * @param endTime 结束时间戳
@@ -306,7 +307,7 @@ public class WordDao {
      */
     public int getCompletedWordCountForDate(long startTime, long endTime) {
         int count = 0;
-        String sql = "SELECT COUNT(*) FROM word WHERE correctCount >= 3 AND lastReviewed >= ? AND lastReviewed < ?";
+        String sql = "SELECT COUNT(*) FROM word WHERE correctCount = 3 AND lastReviewed >= ? AND lastReviewed < ?";
         
         Cursor cursor = null;
         try {
@@ -316,6 +317,38 @@ public class WordDao {
             }
         } catch (Exception e) {
             Log.e(TAG, "Error getting completed word count: " + e.getMessage());
+        } finally {
+            if (cursor != null) {
+                cursor.close();
+            }
+        }
+        
+        return count;
+    }
+    
+    /**
+     * 获取指定时间范围内复习的单词数量
+     * 复习的定义是：correctCount > 3 的单词在指定时间范围内进行了复习
+     * 注意：correctCount = 3 表示刚学会，不算复习；只有 correctCount > 3 才算复习
+     * 
+     * @param startTime 开始时间戳
+     * @param endTime 结束时间戳
+     * @return 复习的单词数量
+     */
+    public int getReviewedWordCountForDate(long startTime, long endTime) {
+        int count = 0;
+        
+        // 只查询correctCount > 3的单词（已经学会且进行过复习的单词）
+        String sql = "SELECT lastReviewed FROM word WHERE correctCount > 3 AND lastReviewed >= ? AND lastReviewed < ?";
+        
+        Cursor cursor = null;
+        try {
+            cursor = db.rawQuery(sql, new String[]{String.valueOf(startTime), String.valueOf(endTime)});
+            if (cursor != null) {
+                count = cursor.getCount();
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "Error getting reviewed word count: " + e.getMessage());
         } finally {
             if (cursor != null) {
                 cursor.close();
@@ -348,5 +381,86 @@ public class WordDao {
         }
         
         return counts;
+    }
+    
+    /**
+     * 获取指定日期范围内每天复习的单词数量
+     * 
+     * @param startDate 开始日期的时间戳
+     * @param endDate 结束日期的时间戳
+     * @return 每天复习的单词数量列表
+     */
+    public List<Integer> getReviewedWordCountsByDateRange(long startDate, long endDate) {
+        List<Integer> counts = new ArrayList<>();
+        
+        // 计算天数
+        int days = (int) ((endDate - startDate) / (24 * 60 * 60 * 1000));
+        
+        // 获取每天的复习单词数量
+        for (int i = 0; i < days; i++) {
+            long dayStart = startDate + i * (24 * 60 * 60 * 1000);
+            long dayEnd = dayStart + (24 * 60 * 60 * 1000);
+            
+            int count = getReviewedWordCountForDate(dayStart, dayEnd);
+            counts.add(count);
+        }
+        
+        return counts;
+    }
+    
+    /**
+     * 获取所有单词
+     * @return 所有单词列表
+     */
+    public List<Word> getAllWords() {
+        List<Word> wordList = new ArrayList<>();
+        String[] columns = {
+            "wordId", "spelling", "phonetic", "meaning", "bookId",
+            "correctCount", "lastReviewed", "nextDueOffset"
+        };
+        
+        Cursor cursor = null;
+        try {
+            cursor = db.query("word", columns, null, null, null, null, null);
+            if (cursor != null && cursor.moveToFirst()) {
+                do {
+                    Word word = cursorToWord(cursor);
+                    wordList.add(word);
+                } while (cursor.moveToNext());
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "Error getting all words: " + e.getMessage());
+        } finally {
+            if (cursor != null) {
+                cursor.close();
+            }
+        }
+        
+        return wordList;
+    }
+    
+    /**
+     * 获取随机单词拼写
+     * @return 随机单词的拼写，如果没有单词则返回null
+     */
+    public String getRandomWordSpelling() {
+        String spelling = null;
+        String sql = "SELECT spelling FROM word ORDER BY RANDOM() LIMIT 1";
+        
+        Cursor cursor = null;
+        try {
+            cursor = db.rawQuery(sql, null);
+            if (cursor != null && cursor.moveToFirst()) {
+                spelling = cursor.getString(cursor.getColumnIndexOrThrow("spelling"));
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "Error getting random word spelling: " + e.getMessage());
+        } finally {
+            if (cursor != null) {
+                cursor.close();
+            }
+        }
+        
+        return spelling;
     }
 }

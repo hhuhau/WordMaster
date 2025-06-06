@@ -14,16 +14,20 @@
 
         <ImageView
             android:id="@+id/backButton"
-            android:layout_width="24dp"
-            android:layout_height="24dp"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
             android:src="@drawable/ic_back"
-            android:layout_gravity="center_vertical" />
+            android:layout_gravity="center_vertical"
+            android:padding="13dp"
+            android:background="@drawable/back_button_ripple"
+            android:clickable="true"
+            android:focusable="true" />
 
         <TextView
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="我的数据"
+            android:text="我的数据    "
             android:textSize="20sp"
             android:textColor="#333333"
             android:gravity="center" />
@@ -32,6 +36,12 @@
             android:layout_width="24dp"
             android:layout_height="24dp" />
     </LinearLayout>
+
+    <!-- 分割线 -->
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="#EEEEEE" />
 
     <!-- 概览选项 -->
     <LinearLayout

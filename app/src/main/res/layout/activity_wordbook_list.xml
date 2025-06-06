@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
@@ -15,16 +16,20 @@
 
         <ImageView
             android:id="@+id/backButton"
-            android:layout_width="24dp"
-            android:layout_height="24dp"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
             android:src="@drawable/ic_back"
-            android:layout_gravity="center_vertical" />
+            android:layout_gravity="center_vertical"
+            android:padding="13dp"
+            android:background="@drawable/back_button_ripple"
+            android:clickable="true"
+            android:focusable="true" />
 
         <TextView
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="选择词书"
+            android:text="选择词书    "
             android:textSize="20sp"
             android:textColor="#333333"
             android:gravity="center" />

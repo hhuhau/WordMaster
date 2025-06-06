@@ -24,6 +24,11 @@ import android.view.Gravity;
 import android.widget.TableLayout;
 import android.widget.TableRow;
 import androidx.core.content.ContextCompat;
+import android.content.SharedPreferences;
+import android.content.Context;
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
+import java.lang.reflect.Type;
 
 
 public class LearnFragment extends Fragment {
@@ -35,6 +40,7 @@ public class LearnFragment extends Fragment {
     private TextView correctCountTextView;
     private TextView instructionTextView;
     private TextView meaningTextView;
+    private TextView progressTextView;
 
     private CardView[] optionCards;
     private TextView[] optionTextViews;
@@ -52,6 +58,8 @@ public class LearnFragment extends Fragment {
     private Word currentWord;
     private boolean hasAnsweredWrong = false; // 标记本轮是否答错过
     private String[] optionTexts;             // 保存当前选项文本
+    private SharedPreferences learningCache; // 学习进度缓存
+    private Gson gson;                        // JSON序列化工具
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -66,6 +74,7 @@ public class LearnFragment extends Fragment {
         correctCountTextView = view.findViewById(R.id.correctCountTextView);
         instructionTextView  = view.findViewById(R.id.instructionTextView);
         meaningTextView      = view.findViewById(R.id.meaningTextView);
+        progressTextView     = view.findViewById(R.id.progressTextView);
         continueButton       = view.findViewById(R.id.continueButton);
         nextWordButton       = view.findViewById(R.id.nextWordButton);
 
@@ -108,6 +117,8 @@ public class LearnFragment extends Fragment {
         }
 
         wordDao = new WordDao(requireContext());
+        learningCache = requireActivity().getSharedPreferences("learning_cache", Context.MODE_PRIVATE);
+        gson = new Gson();
         loadBatchAndShowFirst();
 
         return view;
@@ -117,9 +128,43 @@ public class LearnFragment extends Fragment {
     public void onDestroy() {
         super.onDestroy();
         requireActivity().findViewById(R.id.bottom_navigation).setVisibility(View.VISIBLE);
+        // 只有在学习未完成时才保存进度
+        if (completionLayout.getVisibility() != View.VISIBLE) {
+            saveLearningProgress();
+        }
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+        // 只有在学习未完成时才保存进度
+        if (completionLayout.getVisibility() != View.VISIBLE) {
+            saveLearningProgress();
+        }
     }
 
     private void loadBatchAndShowFirst() {
+        // 尝试恢复之前的学习进度
+        if (restoreLearningProgress()) {
+            // 成功恢复进度，继续之前的学习
+            if (batch != null && !batch.isEmpty() && 
+                currentIndex >= 0 && currentIndex < batch.size() && 
+                batch.get(currentIndex) != null) {
+                try {
+                    showWord(batch.get(currentIndex));
+                    return;
+                } catch (Exception e) {
+                    // 显示单词失败，清除缓存并加载新批次
+                    clearLearningProgress();
+                }
+            }
+        }
+        
+        // 没有缓存或缓存无效，加载新的学习批次
+        loadNewBatch();
+    }
+    
+    private void loadNewBatch() {
         // 从SharedPreferences获取学习单词量设置
         android.content.SharedPreferences prefs = requireActivity().getSharedPreferences("study_settings", android.content.Context.MODE_PRIVATE);
         int batchSize = prefs.getInt("learn_count", 10); // 默认为10个
@@ -129,12 +174,33 @@ public class LearnFragment extends Fragment {
             currentIndex = 0;
             hasAnsweredWrong = false;
             showWord(batch.get(0));
+            // 保存新的学习进度
+            saveLearningProgress();
         }
     }
 
     private void showWord(Word w) {
+        // 安全检查，确保单词不为空
+        if (w == null) {
+            // 如果单词为空，清除缓存并加载新批次
+            clearLearningProgress();
+            loadNewBatch();
+            return;
+        }
+        
         currentWord = w;
         hasAnsweredWrong = false;
+
+        // —— 更新进度显示 ——
+        if (batch != null && !batch.isEmpty()) {
+            int completedCount = 0;
+            for (Word word : batch) {
+                if (word.getCorrectCount() >= 3) {
+                    completedCount++;
+                }
+            }
+            progressTextView.setText(completedCount + "/" + batch.size());
+        }
 
         // —— 隐藏／重置所有状态 ——
         instructionTextView.setVisibility(View.GONE);
@@ -282,6 +348,9 @@ public class LearnFragment extends Fragment {
     }
 
     private void showCompletionPage() {
+        // 清除学习进度缓存，防止错误状态被保存
+        clearLearningProgress();
+        
         // —— 第一步：隐藏练习界面中不需要的所有视图 ——
         wordTextView.setVisibility(View.GONE);
         phoneticTextView.setVisibility(View.GONE);
@@ -330,25 +399,73 @@ public class LearnFragment extends Fragment {
         subtitleParams.setMargins(0, 0, 0, 16);
         completionLayout.addView(subtitle, subtitleParams);
 
-        // 5. 准备单元格边框
-        GradientDrawable cellBorder = new GradientDrawable();
-        cellBorder.setStroke(1, Color.GRAY);
-
-        // 6. 创建 TableLayout
-        TableLayout table = new TableLayout(requireContext());
-        TableLayout.LayoutParams tableParams = new TableLayout.LayoutParams(
-                ViewGroup.LayoutParams.WRAP_CONTENT,
+        // 5. 创建滚动视图包装表格
+        android.widget.ScrollView scrollView = new android.widget.ScrollView(requireContext());
+        LinearLayout.LayoutParams scrollParams = new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
                 ViewGroup.LayoutParams.WRAP_CONTENT
         );
-        table.setLayoutParams(tableParams);
-        table.setStretchAllColumns(true);
-        table.setShrinkAllColumns(true);
-        table.setPadding(0, 0, 0, 16);
+        scrollParams.setMargins(16, 0, 16, 16);
+        scrollView.setLayoutParams(scrollParams);
 
-        // 7. 填充每行“单词 + 中文释义”
-        for (Word w : batch) {
-            TableRow row = new TableRow(requireContext());
-            TableRow.LayoutParams cellParams = new TableRow.LayoutParams(
+        // 6. 创建表格容器
+        LinearLayout tableContainer = new LinearLayout(requireContext());
+        tableContainer.setOrientation(LinearLayout.VERTICAL);
+        tableContainer.setLayoutParams(new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT
+        ));
+        
+        // 7. 创建表格头部
+        LinearLayout headerRow = new LinearLayout(requireContext());
+        headerRow.setOrientation(LinearLayout.HORIZONTAL);
+        headerRow.setLayoutParams(new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT
+        ));
+        headerRow.setBackgroundColor(0xFFE3F2FD); // 浅蓝色背景
+        headerRow.setPadding(0, 12, 0, 12);
+        
+        TextView headerWord = new TextView(requireContext());
+        headerWord.setText("单词");
+        headerWord.setGravity(Gravity.CENTER);
+        headerWord.setTextSize(16f);
+        headerWord.setTextColor(0xFF1976D2);
+        headerWord.setTypeface(headerWord.getTypeface(), android.graphics.Typeface.BOLD);
+        LinearLayout.LayoutParams headerParams = new LinearLayout.LayoutParams(
+                0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f
+        );
+        headerRow.addView(headerWord, headerParams);
+        
+        TextView headerMeaning = new TextView(requireContext());
+        headerMeaning.setText("释义");
+        headerMeaning.setGravity(Gravity.CENTER);
+        headerMeaning.setTextSize(16f);
+        headerMeaning.setTextColor(0xFF1976D2);
+        headerMeaning.setTypeface(headerMeaning.getTypeface(), android.graphics.Typeface.BOLD);
+        headerRow.addView(headerMeaning, headerParams);
+        
+        tableContainer.addView(headerRow);
+
+        // 8. 填充每行"单词 + 中文释义"
+        for (int i = 0; i < batch.size(); i++) {
+            Word w = batch.get(i);
+            LinearLayout row = new LinearLayout(requireContext());
+            row.setOrientation(LinearLayout.HORIZONTAL);
+            row.setLayoutParams(new LinearLayout.LayoutParams(
+                    ViewGroup.LayoutParams.MATCH_PARENT,
+                    ViewGroup.LayoutParams.WRAP_CONTENT
+            ));
+            
+            // 交替行背景色
+            if (i % 2 == 0) {
+                row.setBackgroundColor(0xFFF8F9FA); // 浅灰色
+            } else {
+                row.setBackgroundColor(Color.WHITE);
+            }
+            row.setPadding(0, 16, 0, 16);
+
+            LinearLayout.LayoutParams cellParams = new LinearLayout.LayoutParams(
                     0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f
             );
 
@@ -356,29 +473,51 @@ public class LearnFragment extends Fragment {
             TextView tvWord = new TextView(requireContext());
             tvWord.setText(w.getSpelling());
             tvWord.setGravity(Gravity.CENTER);
-            tvWord.setTextSize(18f);
-            tvWord.setTextColor(Color.BLACK);
-            tvWord.setBackground(cellBorder);
-            tvWord.setPadding(8, 8, 8, 8);
+            tvWord.setTextSize(16f);
+            tvWord.setTextColor(0xFF212529);
+            tvWord.setPadding(12, 8, 12, 8);
             row.addView(tvWord, cellParams);
+            
+            // 分隔线
+            View divider = new View(requireContext());
+            divider.setLayoutParams(new LinearLayout.LayoutParams(1, ViewGroup.LayoutParams.MATCH_PARENT));
+            divider.setBackgroundColor(0xFFDEE2E6);
+            row.addView(divider);
 
             // 右列：中文
             TextView tvMeaning = new TextView(requireContext());
             tvMeaning.setText(w.getMeaning());
             tvMeaning.setGravity(Gravity.CENTER);
-            tvMeaning.setTextSize(18f);
-            tvMeaning.setTextColor(Color.BLACK);
-            tvMeaning.setBackground(cellBorder);
-            tvMeaning.setPadding(8, 8, 8, 8);
+            tvMeaning.setTextSize(16f);
+            tvMeaning.setTextColor(0xFF212529);
+            tvMeaning.setPadding(12, 8, 12, 8);
             row.addView(tvMeaning, cellParams);
 
-            table.addView(row);
+            tableContainer.addView(row);
+            
+            // 添加底部分隔线（除了最后一行）
+            if (i < batch.size() - 1) {
+                View bottomDivider = new View(requireContext());
+                bottomDivider.setLayoutParams(new LinearLayout.LayoutParams(
+                        ViewGroup.LayoutParams.MATCH_PARENT, 1
+                ));
+                bottomDivider.setBackgroundColor(0xFFDEE2E6);
+                tableContainer.addView(bottomDivider);
+            }
         }
+        
+        // 添加表格边框
+        GradientDrawable tableBorder = new GradientDrawable();
+        tableBorder.setStroke(2, 0xFFDEE2E6);
+        tableBorder.setCornerRadius(12f);
+        tableContainer.setBackground(tableBorder);
+        
+        scrollView.addView(tableContainer);
 
-        // 8. 把表格加到 completionLayout
-        completionLayout.addView(table);
+        // 9. 把滚动视图加到 completionLayout
+        completionLayout.addView(scrollView);
 
-        // 9. 添加“再学一组”和“完成”按钮的行
+        // 10. 添加"再学一组"和"完成"按钮的行
         LinearLayout buttonContainer = new LinearLayout(requireContext());
         buttonContainer.setOrientation(LinearLayout.HORIZONTAL);
         buttonContainer.setGravity(Gravity.CENTER);
@@ -389,32 +528,49 @@ public class LearnFragment extends Fragment {
         );
         btnParams.setMargins(16, 0, 16, 0);
 
-        // “再学一组”按钮
+        // "再学一组"按钮 - 圆角样式
         Button btnNextBatch = new Button(requireContext());
         btnNextBatch.setText("再学一组");
-        btnNextBatch.setBackgroundTintList(
-                ContextCompat.getColorStateList(requireContext(), R.color.light_blue_border)
-        );
+        btnNextBatch.setTextColor(Color.WHITE);
+        btnNextBatch.setTextSize(16f);
+        btnNextBatch.setPadding(32, 16, 32, 16);
+        
+        // 创建圆角背景
+        GradientDrawable nextBatchBg = new GradientDrawable();
+        nextBatchBg.setColor(0xFF2196F3); // 蓝色背景
+        nextBatchBg.setCornerRadius(24f); // 圆角
+        btnNextBatch.setBackground(nextBatchBg);
+        
         btnNextBatch.setOnClickListener(v -> {
             completionLayout.setVisibility(View.GONE);
             // 恢复中间区域，以便下次再次学习时可见
             if (learningContainer != null) {
                 learningContainer.setVisibility(View.VISIBLE);
             }
-            loadBatchAndShowFirst();
+            // 加载新的批次
+            loadNewBatch();
         });
         buttonContainer.addView(btnNextBatch, btnParams);
 
-        // “完成”按钮
+        // "完成"按钮 - 圆角样式
         Button btnFinish = new Button(requireContext());
         btnFinish.setText("完成");
-        btnFinish.setBackgroundTintList(
-                ContextCompat.getColorStateList(requireContext(), R.color.light_blue_border)
-        );
-        btnFinish.setOnClickListener(v -> requireActivity().onBackPressed());
+        btnFinish.setTextColor(Color.WHITE);
+        btnFinish.setTextSize(16f);
+        btnFinish.setPadding(32, 16, 32, 16);
+        
+        // 创建圆角背景
+        GradientDrawable finishBg = new GradientDrawable();
+        finishBg.setColor(0xFF4CAF50); // 绿色背景
+        finishBg.setCornerRadius(24f); // 圆角
+        btnFinish.setBackground(finishBg);
+        
+        btnFinish.setOnClickListener(v -> {
+            requireActivity().onBackPressed();
+        });
         buttonContainer.addView(btnFinish, btnParams);
 
-        // 10. 把按钮行加入到 completionLayout
+        // 11. 把按钮行加入到 completionLayout
         LinearLayout.LayoutParams containerParams = new LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
                 ViewGroup.LayoutParams.WRAP_CONTENT
@@ -441,5 +597,171 @@ public class LearnFragment extends Fragment {
         meaningTextView.setVisibility(View.VISIBLE);
 
         nextWordButton.setVisibility(View.VISIBLE);
+    }
+    
+    /**
+     * 保存学习进度到SharedPreferences
+     */
+    private void saveLearningProgress() {
+        if (batch == null || batch.isEmpty()) {
+            return;
+        }
+        
+        SharedPreferences.Editor editor = learningCache.edit();
+        
+        // 保存单词列表
+        String batchJson = gson.toJson(batch);
+        editor.putString("current_batch", batchJson);
+        
+        // 保存当前索引
+        editor.putInt("current_index", currentIndex);
+        
+        // 保存是否答错标记
+        editor.putBoolean("has_answered_wrong", hasAnsweredWrong);
+        
+        // 保存当前批次大小设置
+        android.content.SharedPreferences prefs = requireActivity().getSharedPreferences("study_settings", android.content.Context.MODE_PRIVATE);
+        int currentBatchSize = prefs.getInt("learn_count", 10);
+        editor.putInt("batch_size", currentBatchSize);
+        
+        // 保存时间戳，用于判断缓存是否过期（24小时）
+        editor.putLong("save_timestamp", System.currentTimeMillis());
+        
+        editor.apply();
+    }
+    
+    /**
+     * 从SharedPreferences恢复学习进度
+     * @return 是否成功恢复
+     */
+    private boolean restoreLearningProgress() {
+        try {
+            // 检查缓存是否存在
+            if (!learningCache.contains("current_batch")) {
+                return false;
+            }
+            
+            // 检查缓存是否过期（24小时）
+            long saveTime = learningCache.getLong("save_timestamp", 0);
+            long currentTime = System.currentTimeMillis();
+            long twentyFourHours = 24 * 60 * 60 * 1000;
+            
+            if (currentTime - saveTime > twentyFourHours) {
+                // 缓存过期，清除并返回false
+                clearLearningProgress();
+                return false;
+            }
+            
+            // 检查批次大小是否与当前设置一致
+            android.content.SharedPreferences prefs = requireActivity().getSharedPreferences("study_settings", android.content.Context.MODE_PRIVATE);
+            int currentBatchSize = prefs.getInt("learn_count", 10);
+            int cachedBatchSize = learningCache.getInt("batch_size", 0);
+            
+            if (cachedBatchSize != currentBatchSize) {
+                // 批次大小已改变，清除缓存并返回false
+                clearLearningProgress();
+                return false;
+            }
+            
+            // 恢复单词列表
+            String batchJson = learningCache.getString("current_batch", "");
+            if (batchJson.isEmpty()) {
+                return false;
+            }
+            
+            Type listType = new TypeToken<List<Word>>(){}.getType();
+            batch = gson.fromJson(batchJson, listType);
+            
+            if (batch == null || batch.isEmpty()) {
+                return false;
+            }
+            
+            // 恢复当前索引
+            currentIndex = learningCache.getInt("current_index", 0);
+            
+            // 恢复答错标记
+            hasAnsweredWrong = learningCache.getBoolean("has_answered_wrong", false);
+            
+            // 检查是否所有单词都已完成学习
+            boolean allCompleted = true;
+            List<Word> validWords = new ArrayList<>();
+            
+            for (Word word : batch) {
+                if (word == null || word.getWordId() <= 0) {
+                    continue; // 跳过无效单词
+                }
+                
+                try {
+                    // 重新从数据库获取最新的correctCount
+                    Word updatedWord = wordDao.getWordById(word.getWordId());
+                    if (updatedWord != null) {
+                        word.setCorrectCount(updatedWord.getCorrectCount());
+                        word.setLastReviewed(updatedWord.getLastReviewed());
+                        word.setNextDueOffset(updatedWord.getNextDueOffset());
+                        validWords.add(word);
+                        
+                        if (word.getCorrectCount() < 3) {
+                            allCompleted = false;
+                        }
+                    }
+                } catch (Exception e) {
+                    // 数据库操作失败，跳过这个单词
+                    continue;
+                }
+            }
+            
+            // 更新batch为有效单词列表
+            batch = validWords;
+            
+            // 如果没有有效单词，清除缓存
+            if (batch.isEmpty()) {
+                clearLearningProgress();
+                return false;
+            }
+            
+            if (allCompleted) {
+                // 所有单词都已完成，清除缓存
+                clearLearningProgress();
+                return false;
+            }
+            
+            // 确保currentIndex指向一个未完成的单词
+            if (currentIndex < 0 || currentIndex >= batch.size() || 
+                batch.get(currentIndex) == null || batch.get(currentIndex).getCorrectCount() >= 3) {
+                // 寻找下一个未完成的单词
+                List<Integer> availableIndices = new ArrayList<>();
+                for (int i = 0; i < batch.size(); i++) {
+                    Word word = batch.get(i);
+                    if (word != null && word.getCorrectCount() < 3) {
+                        availableIndices.add(i);
+                    }
+                }
+                
+                if (availableIndices.isEmpty()) {
+                    clearLearningProgress();
+                    return false;
+                }
+                
+                // 随机选择一个未完成的单词
+                int randomIndex = new Random().nextInt(availableIndices.size());
+                currentIndex = availableIndices.get(randomIndex);
+            }
+            
+            return true;
+            
+        } catch (Exception e) {
+            // 恢复失败，清除缓存
+            clearLearningProgress();
+            return false;
+        }
+    }
+    
+    /**
+     * 清除学习进度缓存
+     */
+    private void clearLearningProgress() {
+        SharedPreferences.Editor editor = learningCache.edit();
+        editor.clear();
+        editor.apply();
     }
 }
