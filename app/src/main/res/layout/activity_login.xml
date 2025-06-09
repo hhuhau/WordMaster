@@ -7,16 +7,14 @@
     android:orientation="vertical"
     android:background="#FFFFFF">
 
-    <!-- 标题 -->
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+    <!-- Logo -->
+    <ImageView
+        android:layout_width="110dp"
+        android:layout_height="110dp"
         android:layout_gravity="center_horizontal"
-        android:layout_marginTop="100dp"
-        android:text="词迹"
-        android:textColor="#333333"
-        android:textSize="30sp"
-        android:textStyle="bold" />
+        android:layout_marginTop="80dp"
+        android:src="@drawable/logo"
+        android:scaleType="fitCenter" />
 
     <!-- 手机号输入框 -->
     <com.google.android.material.textfield.TextInputLayout
@@ -113,10 +111,14 @@
 
         <ImageView
             android:id="@+id/wechatLogin"
-            android:layout_width="30dp"
-            android:layout_height="30dp"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
             android:scaleType="fitCenter"
-            android:src="@drawable/wechat" />
+            android:src="@drawable/wechat"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:clickable="true"
+            android:focusable="true"
+            android:padding="5dp" />
 
         <Space
             android:layout_width="30dp"
@@ -124,10 +126,14 @@
 
         <ImageView
             android:id="@+id/qqLogin"
-            android:layout_width="30dp"
-            android:layout_height="30dp"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
             android:scaleType="fitCenter"
-            android:src="@drawable/qq" />
+            android:src="@drawable/qq"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:clickable="true"
+            android:focusable="true"
+            android:padding="5dp" />
     </LinearLayout>
 
     <!-- 底部链接 -->
