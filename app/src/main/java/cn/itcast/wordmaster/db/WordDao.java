@@ -22,6 +22,14 @@ public class WordDao {
     public WordDao(Context context) {
         this.db = WordMasterDBHelper.getInstance(context).getDatabase();
     }
+    
+    /**
+     * 获取数据库实例
+     * @return SQLiteDatabase实例
+     */
+    public SQLiteDatabase getDatabase() {
+        return this.db;
+    }
 
     /**
      * 获取一组学习单词
@@ -30,35 +38,84 @@ public class WordDao {
     public List<Word> getLearningBatch(int batchSize) {
         List<Word> batch = new ArrayList<>();
         
-        // 直接随机抽取指定数量的correctCount < 3的单词
-        String sql = "SELECT * FROM word WHERE correctCount < 3 ORDER BY RANDOM() LIMIT " + batchSize;
+        // 首先获取一个correctCount < 2的单词作为第一个单词（确保是四选一模式）
+        String firstWordSql = "SELECT * FROM word WHERE correctCount < 2 ORDER BY RANDOM() LIMIT 1";
         
-        Cursor cursor = null;
+        Cursor firstCursor = null;
         try {
-            cursor = db.rawQuery(sql, null);
-            while (cursor != null && cursor.moveToNext()) {
-                Word word = cursorToWord(cursor);
-                batch.add(word);
-            }
-
-            // 如果没有正在学习的单词（可能所有单词都已经学完了）
-            if (batch.isEmpty()) {
-                // 获取新的未学习的单词
-                String newSql = "SELECT * FROM word WHERE correctCount = 0 ORDER BY RANDOM() LIMIT " + batchSize;
-                Cursor newCursor = db.rawQuery(newSql, null);
-                while (newCursor != null && newCursor.moveToNext()) {
-                    Word word = cursorToWord(newCursor);
-                    batch.add(word);
-                }
-                newCursor.close();
+            firstCursor = db.rawQuery(firstWordSql, null);
+            if (firstCursor != null && firstCursor.moveToNext()) {
+                Word firstWord = cursorToWord(firstCursor);
+                batch.add(firstWord);
             }
         } catch (Exception e) {
-            Log.e(TAG, "Error getting learning batch: " + e.getMessage());
+            Log.e(TAG, "Error getting first learning word: " + e.getMessage());
         } finally {
-            if (cursor != null) {
-                cursor.close();
+            if (firstCursor != null) {
+                firstCursor.close();
             }
         }
+        
+        // 如果还需要更多单词，继续获取剩余的单词
+        if (batch.size() < batchSize) {
+            int remainingSize = batchSize - batch.size();
+            String remainingSql = "SELECT * FROM word WHERE correctCount < 3 ORDER BY RANDOM() LIMIT " + remainingSize;
+            
+            Cursor cursor = null;
+            try {
+                cursor = db.rawQuery(remainingSql, null);
+                while (cursor != null && cursor.moveToNext()) {
+                    Word word = cursorToWord(cursor);
+                    // 避免重复添加第一个单词
+                    if (batch.isEmpty() || !word.getSpelling().equals(batch.get(0).getSpelling())) {
+                        batch.add(word);
+                        if (batch.size() >= batchSize) {
+                            break;
+                        }
+                    }
+                }
+            } catch (Exception e) {
+                Log.e(TAG, "Error getting remaining learning words: " + e.getMessage());
+            } finally {
+                if (cursor != null) {
+                    cursor.close();
+                }
+            }
+        }
+        
+        // 如果仍然没有足够的单词，尝试获取新的未学习单词
+        if (batch.size() < batchSize) {
+            int remainingSize = batchSize - batch.size();
+            String newSql = "SELECT * FROM word WHERE correctCount = 0 ORDER BY RANDOM() LIMIT " + remainingSize;
+            Cursor newCursor = null;
+            try {
+                newCursor = db.rawQuery(newSql, null);
+                while (newCursor != null && newCursor.moveToNext()) {
+                    Word word = cursorToWord(newCursor);
+                    // 避免重复添加
+                    boolean isDuplicate = false;
+                    for (Word existingWord : batch) {
+                        if (word.getSpelling().equals(existingWord.getSpelling())) {
+                            isDuplicate = true;
+                            break;
+                        }
+                    }
+                    if (!isDuplicate) {
+                        batch.add(word);
+                        if (batch.size() >= batchSize) {
+                            break;
+                        }
+                    }
+                }
+            } catch (Exception e) {
+                Log.e(TAG, "Error getting new learning words: " + e.getMessage());
+            } finally {
+                if (newCursor != null) {
+                    newCursor.close();
+                }
+            }
+        }
+        
         return batch;
     }
     
@@ -462,5 +519,38 @@ public class WordDao {
         }
         
         return spelling;
+    }
+    
+    /**
+     * 根据单词拼写获取完整的Word对象
+     * @param spelling 单词拼写
+     * @return Word对象，如果没有找到则返回null
+     */
+    public Word getWordBySpelling(String spelling) {
+        Word word = null;
+        String sql = "SELECT wordId, spelling, phonetic, meaning, bookId, correctCount, nextDueOffset FROM word WHERE spelling = ?";
+        
+        Cursor cursor = null;
+        try {
+            cursor = db.rawQuery(sql, new String[]{spelling});
+            if (cursor != null && cursor.moveToFirst()) {
+                word = new Word();
+                word.setWordId(cursor.getInt(cursor.getColumnIndexOrThrow("wordId")));
+                word.setSpelling(cursor.getString(cursor.getColumnIndexOrThrow("spelling")));
+                word.setPhonetic(cursor.getString(cursor.getColumnIndexOrThrow("phonetic")));
+                word.setMeaning(cursor.getString(cursor.getColumnIndexOrThrow("meaning")));
+                word.setBookId(cursor.getString(cursor.getColumnIndexOrThrow("bookId")));
+                word.setCorrectCount(cursor.getInt(cursor.getColumnIndexOrThrow("correctCount")));
+                word.setNextDueOffset(cursor.getInt(cursor.getColumnIndexOrThrow("nextDueOffset")));
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "Error getting word by spelling: " + e.getMessage());
+        } finally {
+            if (cursor != null) {
+                cursor.close();
+            }
+        }
+        
+        return word;
     }
 }

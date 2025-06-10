@@ -24,6 +24,7 @@ import com.github.mikephil.charting.data.BarData;
 import com.github.mikephil.charting.data.BarDataSet;
 import com.github.mikephil.charting.data.BarEntry;
 import com.github.mikephil.charting.formatter.IndexAxisValueFormatter;
+import com.github.mikephil.charting.formatter.ValueFormatter;
 import com.github.mikephil.charting.utils.ColorTemplate;
 
 // 数据库相关导入
@@ -388,6 +389,14 @@ public class DataOverviewActivity extends AppCompatActivity {
         stackedDataSet.setColors(colors);
         stackedDataSet.setValueTextSize(10f);
         stackedDataSet.setStackLabels(new String[]{"学习", "复习"});
+        
+        // 设置值格式化器，确保显示整数而不是小数
+        stackedDataSet.setValueFormatter(new ValueFormatter() {
+            @Override
+            public String getFormattedValue(float value) {
+                return String.valueOf((int) value);
+            }
+        });
         
         // 创建BarData
         BarData barData = new BarData(stackedDataSet);

@@ -118,6 +118,14 @@ public class LearnFragment extends Fragment {
 
         wordDao = new WordDao(requireContext());
         learningCache = requireActivity().getSharedPreferences("learning_cache", Context.MODE_PRIVATE);
+        
+        // 临时清除缓存以确保使用新的学习逻辑（避免第一个单词闪退问题）
+        // 这个逻辑可以在确认问题解决后移除
+        SharedPreferences tempCheck = requireActivity().getSharedPreferences("temp_cache_cleared", Context.MODE_PRIVATE);
+        if (!tempCheck.getBoolean("cache_cleared_v2", false)) {
+            clearLearningProgress();
+            tempCheck.edit().putBoolean("cache_cleared_v2", true).apply();
+        }
         gson = new Gson();
         loadBatchAndShowFirst();
 
@@ -725,26 +733,43 @@ public class LearnFragment extends Fragment {
                 return false;
             }
             
-            // 确保currentIndex指向一个未完成的单词
+            // 确保currentIndex指向一个未完成的单词，并且优先选择correctCount < 2的单词（四选一模式）
             if (currentIndex < 0 || currentIndex >= batch.size() || 
                 batch.get(currentIndex) == null || batch.get(currentIndex).getCorrectCount() >= 3) {
-                // 寻找下一个未完成的单词
-                List<Integer> availableIndices = new ArrayList<>();
+                // 首先寻找correctCount < 2的单词（四选一模式）
+                List<Integer> fourChoiceIndices = new ArrayList<>();
+                List<Integer> allAvailableIndices = new ArrayList<>();
+                
                 for (int i = 0; i < batch.size(); i++) {
                     Word word = batch.get(i);
                     if (word != null && word.getCorrectCount() < 3) {
-                        availableIndices.add(i);
+                        allAvailableIndices.add(i);
+                        if (word.getCorrectCount() < 2) {
+                            fourChoiceIndices.add(i);
+                        }
                     }
                 }
                 
-                if (availableIndices.isEmpty()) {
+                if (allAvailableIndices.isEmpty()) {
                     clearLearningProgress();
                     return false;
                 }
                 
-                // 随机选择一个未完成的单词
-                int randomIndex = new Random().nextInt(availableIndices.size());
-                currentIndex = availableIndices.get(randomIndex);
+                // 优先选择四选一模式的单词，如果没有则选择其他未完成的单词
+                if (!fourChoiceIndices.isEmpty()) {
+                    int randomIndex = new Random().nextInt(fourChoiceIndices.size());
+                    currentIndex = fourChoiceIndices.get(randomIndex);
+                } else {
+                    int randomIndex = new Random().nextInt(allAvailableIndices.size());
+                    currentIndex = allAvailableIndices.get(randomIndex);
+                }
+            }
+            
+            // 如果当前单词不是四选一模式，尝试重新加载新的学习批次
+            if (batch.get(currentIndex).getCorrectCount() >= 2) {
+                // 清除缓存，强制重新加载新的学习批次
+                clearLearningProgress();
+                return false;
             }
             
             return true;
